@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Database View - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Database Contents</h1>
+    
+    <h2>Users</h2>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Admin</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.is_admin }}</td>
+                <td>{{ user.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2>Tokens</h2>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>User ID</th>
+                <th>Age</th>
+                <th>Priority</th>
+                <th>Position</th>
+                <th>Status</th>
+                <th>Wait Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for token in tokens %}
+            <tr>
+                <td>{{ token.id }}</td>
+                <td>{{ token.name }}</td>
+                <td>{{ token.user_id }}</td>
+                <td>{{ token.age }}</td>
+                <td>{{ token.priority }}</td>
+                <td>{{ token.position }}</td>
+                <td>{{ token.status }}</td>
+                <td>{{ token.estimated_wait }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2>Counters</h2>
+    <table class="table-container">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Current Token</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for counter in counters %}
+            <tr>
+                <td>{{ counter.id }}</td>
+                <td>{{ counter.name }}</td>
+                <td>{{ counter.status }}</td>
+                <td>{{ counter.current_token_id }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

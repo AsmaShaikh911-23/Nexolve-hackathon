@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Queue Optimizer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <span class="material-icons-round">queue</span>
+                AI Queue Optimizer
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">
+                    <span class="material-icons-round">home</span>
+                    Home
+                </a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('user_dashboard') }}" class="nav-link">
+                        <span class="material-icons-round">dashboard</span>
+                        Dashboard
+                    </a>
+                    {% if session.is_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link admin-link">
+                        <span class="material-icons-round">admin_panel_settings</span>
+                        Admin
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        <span class="material-icons-round">logout</span>
+                        Logout ({{ session.username }})
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">
+                        <span class="material-icons-round">login</span>
+                        Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="nav-link">
+                        <span class="material-icons-round">person_add</span>
+                        Register
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Alert Container -->
+    <div class="alert-container"></div>
+
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2024 AI Queue Optimizer. Smart Queue & Wait-Time Prediction System</p>
+            <div class="footer-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('elderly_priority') }}">Elderly Priority</a>
+                <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+                <a href="{{ url_for('login') }}">Login</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

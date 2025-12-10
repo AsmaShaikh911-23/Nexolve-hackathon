@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wait Time Predictions - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- You can include your admin sidebar or header here -->
+        <div class="main-content">
+            <header>
+                <h1>Wait Time Predictions</h1>
+                <p>Estimated wait time (in minutes) for the next 10 positions in the queue.</p>
+            </header>
+            
+            <div class="chart-container" style="position: relative; height:60vh; width:80vw; margin-top: 2rem;">
+                <canvas id="predictionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('predictionsChart').getContext('2d');
+            
+            fetch('/api/wait-time-predictions')
+                .then(response => response.json())
+                .then(data => {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Estimated Wait Time (minutes)',
+                                data: data.data,
+                                fill: false,
+                                borderColor: 'rgb(75, 192, 192)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Minutes' }
+                                }
+                            }
+                        }
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

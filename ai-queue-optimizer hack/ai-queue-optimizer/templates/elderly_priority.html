@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Priority Queue - AI Queue Optimizer{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 0 auto;">
+    <!-- Priority Header -->
+    <div class="hero" style="margin-bottom: 2rem;">
+        <h2 style="font-size: 2.5rem;">Elderly Priority Mode</h2>
+        <p class="hero-subtitle">Special priority queue for senior citizens</p>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+            <span class="material-icons-round" style="color: #ffd166;">elderly</span>
+            <span style="color: white;">Faster service for our senior community</span>
+        </div>
+    </div>
+    
+    <!-- Priority Form -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+            <div class="card-icon" style="background: linear-gradient(135deg, #ff9e6d, #ffd166);">
+                <span class="material-icons-round">elderly</span>
+            </div>
+            <h4>Join Priority Queue</h4>
+        </div>
+        
+        <form id="priorityQueueForm">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Age</label>
+                <input type="number" name="age" id="age" class="form-control" 
+                       placeholder="Enter your age" min="1" max="120" required>
+                <small style="color: var(--gray); display: block; margin-top: 0.25rem;">
+                    Priority access is automatically enabled for ages 60+
+                </small>
+            </div>
+            
+            <!-- Priority Badge (Initially hidden) -->
+            <div id="priorityBadge" class="priority-badge" style="display: none; margin: 1rem 0; text-align: center; font-size: 1rem; padding: 1rem;">
+                <span class="material-icons-round">priority_high</span>
+                Priority Token Enabled (Senior Citizen)
+                <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">
+                    You will receive priority in the queue
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Service Type (Optional)</label>
+                <select name="service_type" class="form-control">
+                    <option value="">Select service type</option>
+                    <option value="banking">Banking Services</option>
+                    <option value="government">Government Services</option>
+                    <option value="healthcare">Healthcare Services</option>
+                    <option value="other">Other Services</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="mobility_assistance" style="margin-right: 0.5rem;">
+                    I require mobility assistance
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span class="material-icons-round">login</span>
+                Join Priority Queue
+            </button>
+        </form>
+        
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="{{ url_for('index') }}" style="color: var(--primary); text-decoration: none;">
+                <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle;">arrow_back</span>
+                Back to regular queue
+            </a>
+        </div>
+    </div>
+    
+    <!-- Priority Benefits -->
+    <div class="card">
+        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <span class="material-icons-round">verified</span>
+            Priority Benefits
+        </h4>
+        <ul style="padding-left: 1.5rem;">
+            <li>50% faster estimated wait time</li>
+            <li>Priority positioning in the queue</li>
+            <li>Special assistance available</li>
+            <li>Comfortable waiting area access</li>
+            <li>Personalized notifications</li>
+        </ul>
+        
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: var(--radius-sm);">
+            <h5 style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-icons-round">info</span>
+                Important Information
+            </h5>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                Priority service is available for senior citizens aged 60 and above.
+                Please have identification ready for verification at the counter.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="max-width: 500px; margin: 1rem; text-align: center; animation: fadeIn 0.3s ease;">
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #4cc9f0, #4361ee); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <span class="material-icons-round" style="color: white; font-size: 2.5rem;">check</span>
+        </div>
+        <h3>Successfully Joined Priority Queue!</h3>
+        <p>You have been added to the priority queue. Your estimated wait time is significantly reduced.</p>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: center;">
+            <button onclick="window.location.href='{{ url_for('user_dashboard') }}'" class="btn btn-primary">
+                View Dashboard
+            </button>
+            <button onclick="document.getElementById('successModal').style.display = 'none'" class="btn btn-secondary">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('priorityQueueForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        name: formData.get('name'),
+        age: parseInt(formData.get('age'))
+    };
+    
+    QueueUI.joinQueue(data.name, data.age)
+        .then(response => {
+            if (response.success) {
+                document.getElementById('successModal').style.display = 'flex';
+            }
+        });
+});
+
+// Real-time age validation
+document.getElementById('age').addEventListener('input', function() {
+    const age = parseInt(this.value);
+    const badge = document.getElementById('priorityBadge');
+    
+    if (age >= 60) {
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

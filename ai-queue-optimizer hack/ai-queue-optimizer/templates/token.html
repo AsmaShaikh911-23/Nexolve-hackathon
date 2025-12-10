@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Your Token - AI Queue Optimizer{% endblock %}
+
+{% block content %}
+<div class="token-page">
+    <div class="card" style="max-width: 600px; width: 100%;">
+        <!-- Token Display -->
+        <div class="token-display">
+            {{ token.id }}
+        </div>
+        
+        <!-- Token Info -->
+        <div class="token-info">
+            <div style="margin-bottom: 1rem;">
+                <span class="material-icons-round">schedule</span>
+                Estimated Time: <strong>{{ token.estimated_wait }} minutes</strong>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <span class="material-icons-round">people</span>
+                People Ahead: <strong>{{ token.position - 1 }}</strong>
+            </div>
+        </div>
+        
+        <!-- Status Indicators -->
+        <div style="margin: 2rem 0;">
+            {% if token.priority %}
+            <div class="priority-badge" style="margin-bottom: 1rem; font-size: 1rem; padding: 0.5rem 1rem;">
+                <span class="material-icons-round">elderly</span>
+                Priority Token (Senior Citizen)
+            </div>
+            {% endif %}
+            
+            <div class="badge badge-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                <span class="material-icons-round">hourglass_top</span>
+                Status: {{ token.status|title }}
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <span class="material-icons-round">dashboard</span>
+                View Dashboard
+            </a>
+            <button onclick="leaveQueue()" class="btn btn-danger">
+                <span class="material-icons-round">exit_to_app</span>
+                Leave Queue
+            </button>
+        </div>
+        
+        <!-- Missed Turn Message (Hidden by default) -->
+        <div id="missedTurnMessage" class="alert" style="display: none; margin-top: 2rem;">
+            <span class="material-icons-round">warning</span>
+            <div>
+                <strong>You missed your turn.</strong>
+                <p>Your token has been moved down in the queue.</p>
+            </div>
+        </div>
+        
+        <!-- Queue Tips -->
+        <div style="margin-top: 2rem; padding: 1rem; background: var(--gray-light); border-radius: var(--radius);">
+            <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span class="material-icons-round">tips_and_updates</span>
+                Tips for Your Queue
+            </h4>
+            <ul style="text-align: left; padding-left: 1.5rem;">
+                <li>You'll receive a notification 10 minutes before your turn</li>
+                <li>Keep this page open for live updates</li>
+                <li>You can check your dashboard for detailed queue status</li>
+                <li>If you leave, you'll lose your current position</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code for Token -->
+<div class="card" style="max-width: 600px; width: 100%; margin: 2rem auto; text-align: center;">
+    <h4><span class="material-icons-round">qr_code</span> Token QR Code</h4>
+    <div id="qrCode" style="width: 200px; height: 200px; margin: 1rem auto; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+        <span class="material-icons-round" style="font-size: 5rem;">qr_code_2</span>
+    </div>
+    <p>Scan this code at the counter when it's your turn</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function leaveQueue() {
+    if (confirm('Are you sure you want to leave the queue? You will lose your current position.')) {
+        window.location.href = "{{ url_for('logout') }}";
+    }
+}
+
+// Simulate missed turn after 30 seconds for demo purposes
+setTimeout(() => {
+    if (Math.random() > 0.7) { // 30% chance to show missed turn message
+        const message = document.getElementById('missedTurnMessage');
+        message.style.display = 'flex';
+        
+        // Update token status
+        fetch('/api/skip-token/{{ token.id }}', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Token moved down in queue');
+                }
+            });
+    }
+}, 30000);
+</script>
+{% endblock %}

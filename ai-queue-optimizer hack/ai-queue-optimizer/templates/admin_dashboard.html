@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - AI Queue Optimizer{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header" style="margin-bottom: 2rem;">
+            <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-icons-round">admin_panel_settings</span>
+                Admin Panel
+            </h3>
+            <p style="color: #6c757d; font-size: 0.9rem;">Queue Management System</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link active">
+                <span class="material-icons-round">dashboard</span>
+                Queue Overview
+            </a>
+            <a href="{{ url_for('admin_predictions') }}" class="sidebar-link">
+                <span class="material-icons-round">trending_up</span>
+                Predictions
+            </a>
+            <a href="{{ url_for('admin_counters') }}" class="sidebar-link">
+                <span class="material-icons-round">countertops</span>
+                Counters
+            </a>
+            <a href="#settings" class="sidebar-link">
+                <span class="material-icons-round">settings</span>
+                Settings
+            </a>
+            <a href="{{ url_for('index') }}" class="sidebar-link">
+                <span class="material-icons-round">home</span>
+                Back to Home
+            </a>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: 2rem;">
+            <div class="card" style="background: linear-gradient(135deg, #4361ee, #3a0ca3); color: white;">
+                <h4>System Status</h4>
+                <p style="opacity: 0.9; font-size: 0.9rem;">
+                    <span class="material-icons-round" style="font-size: 1rem;">check_circle</span>
+                    All systems operational
+                </p>
+            </div>
+        </div>
+    </aside>
+    
+    <main class="admin-content">
+        <div class="dashboard-header">
+            <div>
+                <h2>Queue Overview</h2>
+                <p style="color: #6c757d;">Real-time monitoring and management</p>
+            </div>
+            <div>
+                <span class="material-icons-round" style="color: #4361ee; font-size: 2rem;">smart_toy</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4>Queue Length</h4>
+                    <span class="material-icons-round" style="color: #4361ee;">people</span>
+                </div>
+                <div class="stat-value" data-stat="total_in_queue">{{ stats.total_in_queue }}</div>
+                <p class="stat-label">Active tokens in queue</p>
+            </div>
+            
+            <div class="stat-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4>Avg. Service Time</h4>
+                    <span class="material-icons-round" style="color: #4361ee;">schedule</span>
+                </div>
+                <div class="stat-value">4.5 min</div>
+                <p class="stat-label">Per token average</p>
+            </div>
+            
+            <div class="stat-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4>Predicted Wait</h4>
+                    <span class="material-icons-round" style="color: #4361ee;">psychology</span>
+                </div>
+                <div class="stat-value" data-stat="average_wait_time">{{ stats.average_wait_time }}m</div>
+                <p class="stat-label">AI predicted average</p>
+            </div>
+            
+            <div class="stat-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4>Rush Prediction</h4>
+                    {% if stats.is_rush_hour %}
+                    <span class="material-icons-round" style="color: #f9c74f;">
+                        trending_up
+                    </span>
+                    {% else %}
+                    <span class="material-icons-round" style="color: #4cc9f0;">
+                        trending_down
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="stat-value">
+                    {{ 'High' if stats.is_rush_hour else 'Low' }}
+                </div>
+                <p class="stat-label">Next 30 minutes</p>
+            </div>
+        </div>
+        
+        <div class="chart-placeholder">
+            <div style="text-align: center; width: 100%;">
+                <h4>Queue Activity - Last 24 Hours</h4>
+                <div style="margin: 2rem 0;">
+                    <div style="display: flex; align-items: flex-end; justify-content: center; gap: 0.5rem; height: 200px; margin-top: 2rem;">
+                        {% set heights = [30, 45, 60, 80, 100, 120, 150, 180, 160, 140, 120, 100, 90, 80, 100, 120, 140, 160, 180, 150, 120, 90, 60, 40] %}
+                        {% for i in range(24) %}
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 20px; background: linear-gradient(to top, #4361ee, #3a0ca3); height: {{ heights[i] }}px; border-radius: 4px 4px 0 0; position: relative;"></div>
+                            <div style="margin-top: 6px; font-size: 0.7rem; color: #6c757d;">{{ i }}:00</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <p style="color: #6c757d;">Queue density visualization</p>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #dee2e6;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="material-icons-round">format_list_numbered</span>
+                    Active Tokens ({{ tokens|length }})
+                </h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Token ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Priority</th>
+                            <th>Position</th>
+                            <th>Wait Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        <tr>
+                            <td><strong>{{ token.id }}</strong></td>
+                            <td>{{ token.name }}</td>
+                            <td>{{ token.age }}</td>
+                            <td>
+                                {% if token.priority %}
+                                <span class="badge badge-warning">YES</span>
+                                {% else %}
+                                <span class="badge">NO</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ token.position }}</td>
+                            <td>{{ token.estimated_wait }} min</td>
+                            <td>
+                                <span class="badge badge-success">{{ token.status|title }}</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-primary btn-process" data-token="{{ token.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                                        <span class="material-icons-round" style="font-size: 1rem;">check</span>
+                                        Done
+                                    </button>
+                                    <button class="btn btn-secondary btn-skip" data-token="{{ token.id }}" style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                                        <span class="material-icons-round" style="font-size: 1rem;">skip_next</span>
+                                        Skip
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="grid grid-3" style="margin-top: 2rem;">
+            {% for counter in counters %}
+            <div class="card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <h4>{{ counter.name }}</h4>
+                    {% if counter.status == 'open' %}
+                    <span class="material-icons-round" style="color: #4cc9f0;">
+                        check_circle
+                    </span>
+                    {% else %}
+                    <span class="material-icons-round" style="color: #f72585;">
+                        cancel
+                    </span>
+                    {% endif %}
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    {% if counter.status == 'open' %}
+                    <div class="counter-status counter-open">
+                        <span class="material-icons-round" style="font-size: 1rem;">
+                            check_circle
+                        </span>
+                        {{ counter.status|upper }}
+                    </div>
+                    {% else %}
+                    <div class="counter-status counter-closed">
+                        <span class="material-icons-round" style="font-size: 1rem;">
+                            cancel
+                        </span>
+                        {{ counter.status|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if counter.status == 'open' %}
+                    <button class="counter-toggle btn btn-secondary"
+                            data-counter="{{ counter.id }}" data-status="{{ counter.status }}" style="width: 100%;">
+                        Close Counter
+                    </button>
+                    {% else %}
+                    <button class="counter-toggle btn btn-primary"
+                            data-counter="{{ counter.id }}" data-status="{{ counter.status }}" style="width: 100%;">
+                        Open Counter
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="suggestion-box">
+            <h4>
+                <span class="material-icons-round">tips_and_updates</span>
+                AI Recommendation
+            </h4>
+            <p id="aiRecommendation">
+                {% if stats.total_in_queue > 10 %}
+                Recommendation: Open Counter 2 to reduce waiting time.
+                {% elif stats.average_wait_time > 15 %}
+                Recommendation: Consider priority token processing for elderly.
+                {% else %}
+                System is operating optimally. No immediate action required.
+                {% endif %}
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; opacity: 0.9;">
+                <span class="material-icons-round" style="font-size: 1rem;">update</span>
+                Updated just now
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update AI recommendation based on queue stats
+function updateAIRecommendation() {
+    const recommendation = document.getElementById('aiRecommendation');
+    const queueLengthElement = document.querySelector('[data-stat="total_in_queue"]');
+    const avgWaitElement = document.querySelector('[data-stat="average_wait_time"]');
+    
+    if (!queueLengthElement || !avgWaitElement) {
+        console.error('Required stats elements not found');
+        return;
+    }
+    
+    const queueLength = parseInt(queueLengthElement.textContent) || 0;
+    
+    // Get text content, remove 'm' unit, and parse as float
+    const avgWaitText = avgWaitElement.textContent.replace('m', '').trim();
+    const avgWait = parseFloat(avgWaitText) || 0;
+    
+    if (queueLength > 15) {
+        recommendation.textContent = "🚨 CRITICAL: Queue length exceeding capacity. Open all counters immediately.";
+    } else if (queueLength > 10) {
+        recommendation.textContent = "Recommendation: Open Counter 2 to reduce waiting time.";
+    } else if (avgWait > 20) {
+        recommendation.textContent = "Recommendation: Implement batch processing for similar service types.";
+    } else if (queueLength < 3) {
+        recommendation.textContent = "System is operating optimally. Consider staff rotation.";
+    } else {
+        recommendation.textContent = "System is operating within optimal parameters.";
+    }
+}
+
+// Update recommendation every 30 seconds
+setInterval(updateAIRecommendation, 30000);
+
+// Helper function for API calls
+async function makeApiCall(url, method = 'POST', data = {}) {
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: method !== 'GET' ? JSON.stringify(data) : null
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    document.querySelectorAll('.custom-notification').forEach(n => n.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `custom-notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? '#4cc9f0' : type === 'error' ? '#f72585' : '#4361ee'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        font-size: 0.9rem;
+    `;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Helper function to update stats after token processing
+function updateStatsAfterTokenProcessed() {
+    const queueLengthElement = document.querySelector('[data-stat="total_in_queue"]');
+    if (queueLengthElement) {
+        const currentLength = parseInt(queueLengthElement.textContent) || 0;
+        const newLength = Math.max(0, currentLength - 1);
+        queueLengthElement.textContent = newLength;
+        
+        // Update AI recommendation
+        updateAIRecommendation();
+        
+        // Update token count in header
+        const tokenCountHeader = document.querySelector('h3 span + span');
+        if (tokenCountHeader) {
+            const tokens = document.querySelectorAll('tbody tr');
+            const tokenCount = Math.max(0, tokens.length - 1);
+            tokenCountHeader.textContent = `Active Tokens (${tokenCount})`;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle "Done" button clicks
+    document.querySelectorAll('.btn-process').forEach(button => {
+        button.addEventListener('click', async function() {
+            const tokenId = this.dataset.token;
+            const row = this.closest('tr');
+            
+            if (!confirm(`Mark token ${tokenId} as completed?`)) {
+                return;
+            }
+            
+            try {
+                const data = await makeApiCall(`/api/process-token/${tokenId}`, 'POST', { counter_id: 1 });
+                
+                if (data.success) {
+                    showNotification(`Token ${tokenId} marked as completed`, 'success');
+                    
+                    // Add fade out animation
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-100%)';
+                    
+                    setTimeout(() => {
+                        row.remove();
+                        updateStatsAfterTokenProcessed();
+                    }, 500);
+                } else {
+                    showNotification(data.message || 'Failed to process token', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error occurred. Please try again.', 'error');
+            }
+        });
+    });
+
+    // Handle "Skip" button clicks
+    document.querySelectorAll('.btn-skip').forEach(button => {
+        button.addEventListener('click', async function() {
+            const tokenId = this.dataset.token;
+            
+            if (!confirm(`Skip token ${tokenId}? It will be moved to the end of the queue.`)) {
+                return;
+            }
+            
+            try {
+                const data = await makeApiCall(`/api/skip-token/${tokenId}`, 'POST');
+                
+                if (data.success) {
+                    showNotification(`Token ${tokenId} skipped successfully`, 'success');
+                    
+                    // Update the UI without full page reload
+                    const row = this.closest('tr');
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0.5';
+                    
+                    // Move to bottom of table
+                    setTimeout(() => {
+                        const tbody = document.querySelector('tbody');
+                        tbody.appendChild(row);
+                        row.style.opacity = '1';
+                        
+                        // Update positions
+                        document.querySelectorAll('tbody tr').forEach((tr, index) => {
+                            const positionCell = tr.querySelector('td:nth-child(5)');
+                            if (positionCell) {
+                                positionCell.textContent = index + 1;
+                            }
+                        });
+                    }, 300);
+                } else {
+                    showNotification(data.message || 'Failed to skip token', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error occurred. Please try again.', 'error');
+            }
+        });
+    });
+
+    // Handle Counter Toggle Clicks
+    document.querySelectorAll('.counter-toggle').forEach(button => {
+        button.addEventListener('click', async function() {
+            const counterId = this.dataset.counter;
+            const currentStatus = this.dataset.status;
+            const newStatus = currentStatus === 'open' ? 'closed' : 'open';
+            
+            if (!confirm(`Are you sure you want to ${newStatus} this counter?`)) {
+                return;
+            }
+            
+            try {
+                const data = await makeApiCall(`/api/update-counter/${counterId}`, 'POST', { status: newStatus });
+                
+                if (data.success) {
+                    showNotification(`Counter ${counterId} is now ${newStatus}`, 'success');
+                    
+                    // Update button appearance
+                    this.dataset.status = newStatus;
+                    this.textContent = currentStatus === 'open' ? 'Open Counter' : 'Close Counter';
+                    this.classList.toggle('btn-primary');
+                    this.classList.toggle('btn-secondary');
+                    
+                    // Update icon
+                    const icon = this.closest('.card').querySelector('.material-icons-round');
+                    if (newStatus === 'open') {
+                        icon.textContent = 'check_circle';
+                        icon.style.color = '#4cc9f0';
+                    } else {
+                        icon.textContent = 'cancel';
+                        icon.style.color = '#f72585';
+                    }
+                    
+                    // Update status badge
+                    const statusDiv = this.closest('.card').querySelector('.counter-status');
+                    statusDiv.textContent = newStatus.toUpperCase();
+                    statusDiv.className = newStatus === 'open' ? 'counter-status counter-open' : 'counter-status counter-closed';
+                    
+                    // Update AI recommendation
+                    updateAIRecommendation();
+                } else {
+                    showNotification(data.message || 'Failed to update counter status', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error occurred. Please try again.', 'error');
+            }
+        });
+    });
+
+    // Auto-refresh queue data every 30 seconds
+    setInterval(async () => {
+        try {
+            const data = await makeApiCall('/api/queue-stats', 'GET');
+            
+            if (data.success) {
+                // Update stats
+                const queueLengthElement = document.querySelector('[data-stat="total_in_queue"]');
+                const avgWaitElement = document.querySelector('[data-stat="average_wait_time"]');
+                
+                if (queueLengthElement && data.total_in_queue !== undefined) {
+                    queueLengthElement.textContent = data.total_in_queue;
+                }
+                
+                if (avgWaitElement && data.average_wait_time !== undefined) {
+                    avgWaitElement.textContent = data.average_wait_time + 'm';
+                }
+                
+                // Update AI recommendation
+                updateAIRecommendation();
+                
+                // Show refresh notification
+                showNotification('Queue data refreshed', 'info');
+            }
+        } catch (error) {
+            console.log('Auto-refresh failed:', error);
+        }
+    }, 30000);
+
+    // Initialize AI recommendation
+    updateAIRecommendation();
+});
+</script>
+{% endblock %}

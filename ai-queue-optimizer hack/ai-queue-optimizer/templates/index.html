@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}AI Queue Optimizer - Smart Queue & Wait-Time Prediction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>AI Queue Optimizer</h1>
+        <p class="hero-subtitle">Smart digital queueing with AI wait-time prediction</p>
+        
+        <!-- Stats Display -->
+        <div class="stats-display">
+            <div class="stat-item">
+                <h3>Currently in Queue</h3>
+                <p class="stat-number" data-stat="total_in_queue">{{ stats.total_in_queue }}</p>
+                <p class="stat-label-small">People waiting</p>
+            </div>
+            
+            <div class="stat-item">
+                <h3>Average Wait Time</h3>
+                <p class="stat-number" data-stat="average_wait_time">{{ stats.average_wait_time }} min</p>
+                <p class="stat-label-small">Estimated wait</p>
+            </div>
+            
+            <div class="stat-item">
+                <h3>Rush Hour</h3>
+                <p class="stat-number" data-stat="is_rush_hour">{{ 'Yes' if stats.is_rush_hour else 'No' }}</p>
+                <p class="stat-label-small">Current status</p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="hero-actions">
+            {% if session.user_id %}
+                <a href="#join-queue" class="btn btn-primary btn-lg">
+                    <span class="material-icons-round">add_circle</span>
+                    Join Queue
+                </a>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary btn-lg">
+                    <span class="material-icons-round">dashboard</span>
+                    My Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <span class="material-icons-round">person_add</span>
+                    Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary btn-lg">
+                    <span class="material-icons-round">login</span>
+                    Login
+                </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Feature Cards -->
+    <section class="feature-section">
+        <h2 class="text-center">Smart Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon">
+                    <span class="material-icons-round">schedule</span>
+                </div>
+                <h3>Real-Time Queue Management</h3>
+                <p>Live tracking and management of queue positions with instant updates</p>
+            </div>
+            
+            <div class="feature-card fade-in" style="animation-delay: 0.2s">
+                <div class="feature-icon">
+                    <span class="material-icons-round">psychology</span>
+                </div>
+                <h3>AI Wait-Time Prediction</h3>
+                <p>Machine learning algorithms predict accurate wait times</p>
+            </div>
+            
+            <div class="feature-card fade-in" style="animation-delay: 0.4s">
+                <div class="feature-icon">
+                    <span class="material-icons-round">confirmation_number</span>
+                </div>
+                <h3>Smart Digital Token System</h3>
+                <p>Digital tokens with real-time updates and notifications</p>
+            </div>
+            
+            <div class="feature-card fade-in" style="animation-delay: 0.6s">
+                <div class="feature-icon">
+                    <span class="material-icons-round">dashboard</span>
+                </div>
+                <h3>Live Queue Dashboard</h3>
+                <p>Comprehensive dashboard for monitoring queue status</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Queue Options Section -->
+    <section id="join-queue" class="join-section" style="margin-top: 4rem;">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <h3 class="text-center">Queue Options</h3>
+            
+            {% if session.user_id %}
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+                <!-- Regular Queue -->
+                <div class="card" style="cursor: pointer; transition: var(--transition);" 
+                     onclick="joinRegularQueue()" 
+                     onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-lg)';" 
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)';">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem;">
+                        <div style="background: var(--primary); color: white; width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <span class="material-icons-round" style="font-size: 28px;">queue</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; color: var(--dark);">Join Regular Queue</h4>
+                            <p style="color: var(--gray); margin: 0.5rem 0 0 0; font-size: 0.95rem;">
+                                Standard queue service with estimated wait time
+                            </p>
+                        </div>
+                        <div>
+                            <span class="material-icons-round" style="color: var(--primary); font-size: 24px;">arrow_forward</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Priority Queue -->
+                <div class="card" style="cursor: pointer; transition: var(--transition); border: 2px solid var(--warning);" 
+                     onclick="joinPriorityQueue()"
+                     onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-lg)';" 
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)';">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem;">
+                        <div style="background: var(--warning); color: white; width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <span class="material-icons-round" style="font-size: 28px;">elderly</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <h4 style="margin: 0; color: var(--dark);">Join Priority Queue</h4>
+                                <span class="badge badge-warning" style="font-size: 0.75rem;">Priority</span>
+                            </div>
+                            <p style="color: var(--gray); margin: 0; font-size: 0.95rem;">
+                                For elderly (60+ years) or special needs - Faster service with reduced wait time
+                            </p>
+                        </div>
+                        <div>
+                            <span class="material-icons-round" style="color: var(--warning); font-size: 24px;">arrow_forward</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manual Form Option -->
+                <div style="margin-top: 0.5rem; text-align: center;">
+                    <button onclick="showManualForm()" class="btn btn-secondary" style="width: 100%;">
+                        <span class="material-icons-round">tune</span>
+                        Manual Queue Entry (Custom Options)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Manual Form (Hidden by default) -->
+            <div id="manualForm" style="display: none; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-light);">
+                <h4 style="text-align: center; margin-bottom: 1.5rem;">Custom Queue Entry</h4>
+                <form id="joinQueueForm">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="material-icons-round">person</span>
+                            Your Name
+                        </label>
+                        <input type="text" name="name" class="form-control" value="{{ session.username }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="material-icons-round">cake</span>
+                            Your Age
+                        </label>
+                        <input type="number" name="age" class="form-control" id="age" placeholder="Enter your age" min="1" max="120" required>
+                        <small style="color: var(--gray); font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+                            Age 60+ automatically qualifies for priority service
+                        </small>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="priority" name="priority">
+                        <label for="priority" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-icons-round">elderly</span>
+                            <span>Elderly or need priority service?</span>
+                        </label>
+                        <span id="priorityBadge" class="badge badge-warning" style="display: none; margin-left: 0.5rem;">
+                            Priority Service
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                            <span class="material-icons-round">login</span>
+                            Join Queue
+                        </button>
+                        <button type="button" onclick="hideManualForm()" class="btn btn-secondary">
+                            <span class="material-icons-round">close</span>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            {% else %}
+            <div class="card" style="margin-top: 1.5rem;">
+                <div style="text-align: center; padding: 2rem;">
+                    <span class="material-icons-round" style="font-size: 64px; color: var(--primary);">lock</span>
+                    <h4 style="margin: 1rem 0; color: var(--dark);">Login Required</h4>
+                    <p style="color: var(--gray); margin-bottom: 2rem;">Please login or register to access queue services</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">
+                            <span class="material-icons-round">login</span>
+                            Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-secondary">
+                            <span class="material-icons-round">person_add</span>
+                            Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <p class="text-center" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-light);">
+                <a href="{{ url_for('elderly_priority') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--primary); text-decoration: none;">
+                    <span class="material-icons-round">info</span>
+                    Learn more about priority services and eligibility
+                </a>
+            </p>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section class="feature-section" style="margin-top: 4rem;">
+        <h2 class="text-center">How It Works</h2>
+        <div class="grid grid-3" style="margin-top: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons-round">how_to_reg</span>
+                    </div>
+                    <h4>1. Login & Choose</h4>
+                </div>
+                <p>Login to your account and choose between regular or priority queue based on your needs.</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons-round">confirmation_number</span>
+                    </div>
+                    <h4>2. Get Digital Token</h4>
+                </div>
+                <p>Receive a digital token with your queue position and estimated wait time.</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons-round">notifications</span>
+                    </div>
+                    <h4>3. Track & Get Notified</h4>
+                </div>
+                <p>Track your position in real-time and get notified 10 minutes before your turn.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+// Queue joining functions
+function joinRegularQueue() {
+    const name = "{{ session.username }}";
+    const age = 30; // Default age for regular queue
+    
+    QueueUI.showAlert('Joining regular queue...', 'info');
+    
+    QueueUI.joinQueue(name, age, false)
+        .then(data => {
+            if (data.success) {
+                QueueUI.showAlert('Successfully joined regular queue! Redirecting to dashboard...', 'success');
+                // Redirect happens automatically via the joinQueue function
+            }
+        })
+        .catch(error => {
+            QueueUI.showAlert('Failed to join queue. Please try again.', 'warning');
+        });
+}
+
+function joinPriorityQueue() {
+    if (confirm('Are you 60+ years old or require priority service due to special needs?\n\nPriority queue provides faster service for eligible individuals.')) {
+        const name = "{{ session.username }}";
+        const age = 65; // Default age for priority (elderly)
+        
+        QueueUI.showAlert('Joining priority queue...', 'info');
+        
+        QueueUI.joinQueue(name, age, true)
+            .then(data => {
+                if (data.success) {
+                    QueueUI.showAlert('Successfully joined priority queue! You will receive faster service.', 'success');
+                }
+            })
+            .catch(error => {
+                QueueUI.showAlert('Failed to join priority queue. Please try again.', 'warning');
+            });
+    }
+}
+
+// Manual form functions
+function showManualForm() {
+    document.getElementById('manualForm').style.display = 'block';
+    // Scroll to form
+    document.getElementById('manualForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideManualForm() {
+    document.getElementById('manualForm').style.display = 'none';
+}
+
+// Age validation for priority badge
+document.addEventListener('DOMContentLoaded', function() {
+    const ageInput = document.getElementById('age');
+    const priorityCheckbox = document.getElementById('priority');
+    const priorityBadge = document.getElementById('priorityBadge');
+    
+    if (ageInput && priorityBadge) {
+        ageInput.addEventListener('input', function() {
+            const age = parseInt(this.value) || 0;
+            
+            if (age > 60) {
+                priorityBadge.style.display = 'inline-block';
+                priorityBadge.textContent = 'Elderly Priority';
+                if (priorityCheckbox) {
+                    priorityCheckbox.checked = true;
+                }
+            } else {
+                priorityBadge.style.display = 'none';
+                if (priorityCheckbox && age <= 60) {
+                    priorityCheckbox.checked = false;
+                }
+            }
+        });
+    }
+    
+    // Auto-update stats every 30 seconds
+    if (window.location.pathname === '/') {
+        setInterval(() => {
+            fetch('/api/queue-stats')
+                .then(response => response.json())
+                .then(stats => {
+                    document.querySelectorAll('[data-stat]').forEach(el => {
+                        const stat = el.dataset.stat;
+                        if (stats[stat] !== undefined) {
+                            if (stat === 'average_wait_time') {
+                                el.textContent = stats[stat] + ' min';
+                            } else if (stat === 'is_rush_hour') {
+                                el.textContent = stats[stat] ? 'Yes' : 'No';
+                            } else {
+                                el.textContent = stats[stat];
+                            }
+                        }
+                    });
+                });
+        }, 30000);
+    }
+});
+</script>
+{% endblock %}

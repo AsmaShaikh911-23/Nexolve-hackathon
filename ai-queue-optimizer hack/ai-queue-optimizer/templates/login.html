@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Queue Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">AI Queue Optimizer</h1>
+            <h2>Login to Your Account</h2>
+            
+            {% if error %}
+            <div class="alert alert-warning">
+                <span class="material-icons-round">warning</span>
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <span class="material-icons-round">person</span>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <span class="material-icons-round">lock</span>
+                        Password
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="material-icons-round">login</span>
+                    Login
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+                <p>Are you an admin? <a href="{{ url_for('admin_login') }}">Admin Login</a></p>
+                <p>Or <a href="{{ url_for('index') }}">continue as guest</a></p>
+            </div>
+            
+            <div class="demo-credentials">
+                <h4>Demo Credentials:</h4>
+                <div style="margin-bottom: 10px;">
+                    <strong>Admin:</strong> admin / admin123
+                </div>
+                <div>
+                    <strong>User:</strong> Register to create your own account
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
