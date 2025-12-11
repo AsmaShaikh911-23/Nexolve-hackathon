@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - AI Queue Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">AI Queue Optimizer</h1>
+            <h2>Administrator Login</h2>
+            
+            {% if error %}
+            <div class="alert alert-warning">
+                <span class="material-icons-round">warning</span>
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('admin_login') }}">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <span class="material-icons-round">admin_panel_settings</span>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <span class="material-icons-round">lock</span>
+                        Password
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="material-icons-round">login</span>
+                    Login
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Are you a regular user? <a href="{{ url_for('login') }}">Login here</a>.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

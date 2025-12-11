@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Counters - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- You can include your admin sidebar or header here -->
+        <div class="main-content">
+            <header>
+                <h1>Manage Counters</h1>
+                <p>Toggle counters between open and closed states.</p>
+            </header>
+
+            <div class="counters-list" style="margin-top: 2rem;">
+                {% for counter in counters %}
+                <div class="counter-item" id="counter-{{ counter.id }}" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0;">{{ counter.name }}</h3>
+                        <span class="status-badge status-{{ counter.status }}">{{ counter.status }}</span>
+                    </div>
+                    <div class="toggle-switch">
+                        <label class="switch">
+                            <input type="checkbox" class="counter-toggle" data-id="{{ counter.id }}" {% if counter.status == 'open' %}checked{% endif %}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggles = document.querySelectorAll('.counter-toggle');
+            
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', function () {
+                    const counterId = this.dataset.id;
+                    const newStatus = this.checked ? 'open' : 'closed';
+
+                    fetch(`/api/update-counter/${counterId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update the UI
+                            const counterItem = document.getElementById(`counter-${counterId}`);
+                            const statusBadge = counterItem.querySelector('.status-badge');
+                            statusBadge.textContent = newStatus;
+                            statusBadge.className = `status-badge status-${newStatus}`;
+                        } else {
+                            // Revert the toggle on failure
+                            this.checked = !this.checked;
+                            alert('Failed to update counter status.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.checked = !this.checked;
+                        alert('An error occurred.');
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

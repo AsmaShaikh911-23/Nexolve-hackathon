@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - AI Queue Optimizer{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="user-info">
+            <div class="user-avatar">
+                {{ session.user_name[0] if session.user_name else 'U' }}
+            </div>
+            <div>
+                <h3>{{ session.user_name or 'User' }}</h3>
+                <p>Welcome to your dashboard</p>
+            </div>
+        </div>
+        <div class="token-badge">
+            Token: {{ token.id }}
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+            <span class="material-icons-round">logout</span>
+            Logout
+        </a>
+    </div>
+
+    <!-- Alert Container -->
+    <div class="alert-container"></div>
+
+    <!-- Main Cards -->
+    <div class="grid grid-2" style="gap: 2rem; margin-bottom: 2rem;">
+        <!-- Your Token Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <span class="material-icons-round">confirmation_number</span>
+                </div>
+                <h4>Your Token</h4>
+            </div>
+            <div style="text-align: center; padding: 2rem 0;">
+                <div style="font-size: 4rem; font-weight: 700; color: var(--primary);">
+                    {{ token.id }}
+                </div>
+                <div style="margin: 1.5rem 0;">
+                    <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">
+                        <span class="material-icons-round" style="vertical-align: middle;">people</span>
+                        People ahead: <strong data-field="people_ahead">{{ token.position - 1 }}</strong>
+                    </div>
+                    <div style="font-size: 1.2rem;">
+                        <span class="material-icons-round" style="vertical-align: middle;">schedule</span>
+                        Estimated wait: <strong data-field="estimated_wait">{{ token.estimated_wait }} minutes</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Queue Status -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <span class="material-icons-round">dashboard</span>
+                </div>
+                <h4>Live Queue Status</h4>
+            </div>
+            <div style="padding: 1rem 0;">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        Total in queue: <strong data-stat="total_in_queue">{{ stats.total_in_queue }}</strong>
+                    </div>
+                    <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        Average wait time: <strong data-stat="average_wait_time">{{ stats.average_wait_time }} min</strong>
+                    </div>
+                    <div style="font-size: 1.1rem;">
+                        Counters open: <strong data-stat="counters_open">{{ stats.counters_open }}/3</strong>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <div style="font-size: 0.9rem; color: var(--gray);">
+                        <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle;">update</span>
+                        Last updated: <span id="lastUpdated">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+            <div class="card-icon">
+                <span class="material-icons-round">trending_up</span>
+            </div>
+            <h4>Queue Progress</h4>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 3rem; padding: 2rem; flex-wrap: wrap;">
+            <div class="progress-circle">
+                <svg viewBox="0 0 100 100">
+                    <circle class="progress-circle-bg" cx="50" cy="50" r="45"></circle>
+                    <circle class="progress-circle-fill" cx="50" cy="50" r="45" 
+                            data-percentage="{{ ((token.position / (stats.total_in_queue + 1)) * 100) | round }}"></circle>
+                </svg>
+                <div class="progress-text">
+                    <div style="font-size: 2rem; font-weight: 700;">
+                        {{ token.position }}
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">
+                        Position in queue
+                    </div>
+                </div>
+            </div>
+            <div style="max-width: 300px;">
+                <h4>Your Queue Status</h4>
+                <p>You are currently <strong>position {{ token.position }}</strong> in the queue.</p>
+                <p>Based on current queue speed, your estimated wait time is <strong>{{ token.estimated_wait }} minutes</strong>.</p>
+                {% if token.priority %}
+                <div class="priority-badge" style="margin-top: 1rem;">
+                    <span class="material-icons-round">priority_high</span>
+                    Priority Token Active
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('token_page') }}" class="btn btn-primary">
+            <span class="material-icons-round">visibility</span>
+            View Token Details
+        </a>
+        <button class="btn btn-secondary" onclick="window.print()">
+            <span class="material-icons-round">print</span>
+            Print Token
+        </button>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">
+            <span class="material-icons-round">exit_to_app</span>
+            Leave Queue
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 
+    The polling logic for token status is now handled by the global script.js file.
+    This block is kept for clarity but can be removed.
+    The `QueueUI.updateTokenStatus()` function in script.js will now manage
+    the dynamic updates for this page.
+-->
+{% endblock %}
