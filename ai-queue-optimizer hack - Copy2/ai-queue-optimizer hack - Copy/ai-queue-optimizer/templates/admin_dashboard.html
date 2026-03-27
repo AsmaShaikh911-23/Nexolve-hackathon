@@ -1,0 +1,330 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <h1 class="fade-in">Dashboard</h1>
+    <p class="welcome-message fade-in">Welcome back, <strong>{{ session.username }}</strong>!</p>
+</header>
+
+<!-- Stats Section -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <h3><i class="fas fa-users"></i> In Queue</h3>
+        <p class="stat-number">{{ stats.total_in_queue }}</p>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-star"></i> Priority Tokens</h3>
+        <p class="stat-number">{{ stats.priority_count }}</p>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-clock"></i> Avg. Wait</h3>
+        <p class="stat-number">{{ stats.average_wait_time }} min</p>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-cash-register"></i> Counters Open</h3>
+        <p class="stat-number">{{ stats.counters_open }}</p>
+    </div>
+</section>
+<!-- Service Analytics Chart -->
+<div class="content-block">
+    <h2><i class="fas fa-chart-line"></i> Service & Wait-Time Analytics</h2>
+    <canvas id="serviceChart" style="height: 300px;"></canvas>
+</div>
+
+
+<div class="dashboard-columns">
+    <!-- Active Queue Section -->
+    <div class="column-main">
+        <div class="content-block">
+            <h2><i class="fas fa-stream"></i> Active Queue</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Token ID</th>
+                            <th>Name</th>
+                            <th>Wait (min)</th>
+                            <th>Joined At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        <tr class="{{ 'priority-row' if token.priority }}">
+                            <td>
+                                <span class="position-badge">{{ token.position }}</span>
+                                {% if token.priority %}<i class="fas fa-star priority-icon" title="Priority"></i>{% endif %}
+                            </td>
+                            <td>{{ token.id }}</td>
+                            <td>{{ token.name }}</td>
+                            <td>{{ token.estimated_wait }}</td>
+                            <td>{{ token.joined_at | format_datetime }}</td>
+                            <td class="actions">
+                                <button class="btn btn-primary call-token-btn" data-token-id="{{ token.id }}">Call</button>
+                                <button class="btn btn-secondary skip-token-btn" data-token-id="{{ token.id }}">Skip</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">The queue is empty.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Counters Section -->
+    <div class="column-side">
+        <div class="content-block">
+            <h2><i class="fas fa-desktop"></i> Counters Status</h2>
+            <div class="counters-grid">
+                {% for counter in counters %}
+                <div class="counter-card {% if counter.status == 'open' %}open{% else %}closed{% endif %}">
+                    <div class="counter-header">
+                        <span>{{ counter.name }}</span>
+                        <span class="status-indicator">{{ counter.status | capitalize }}</span>
+                    </div>
+                    <div class="counter-body">
+                        {% if counter.current_token %}
+                            <p>Serving:</p>
+                            <strong class="serving-token">{{ counter.current_token }}</strong>
+                            <button class="btn btn-success process-token-btn" data-token-id="{{ counter.current_token }}">Done</button>
+                        {% else %}
+                            <p class="idle-text">Idle</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Predictions -->
+<div id="predictions-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <button class="modal-close">&times;</button>
+        <header class="page-header">
+            <h2><i class="fas fa-chart-line"></i> Wait Time Predictions</h2>
+            <p>Estimated wait time (in minutes) for the next 10 positions in the queue.</p>
+        </header>
+        <div class="chart-container" style="position: relative; height:50vh; width:100%;">
+            <canvas id="predictionsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Counters Management -->
+<div id="counters-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <button class="modal-close">&times;</button>
+        <header class="page-header">
+            <h2><i class="fas fa-cash-register"></i> Manage Counters</h2>
+            <p>Toggle the status of each counter.</p>
+        </header>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Counter Name</th>
+                        <th>Current Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for counter in counters %}
+                    <tr>
+                        <td>{{ counter.name }}</td>
+                        <td>
+                            <span id="status-text-{{ counter.id }}" class="badge {{ 'badge-success' if counter.status == 'open' else 'badge-danger' }}">
+                                {{ counter.status | capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary toggle-counter-status" data-counter-id="{{ counter.id }}" data-current-status="{{ counter.status }}">
+                                Toggle Status
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // --- Service Chart (Wait-Time Analytics) ---
+    fetch("/api/wait-time-analytics")
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById("serviceChart").getContext("2d");
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.hours,
+                    datasets: [{
+                        label: "Average Wait Time (min)",
+                        data: data.wait_times,
+                        borderWidth: 2,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+
+    // --- Helper function to handle API requests ---
+    function apiRequest(endpoint, options, successCallback) {
+        fetch(endpoint, options)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (successCallback) successCallback(data);
+                    else window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+                alert('Network error – see console.');
+            });
+    }
+
+    // --- Event Listener for "Done" buttons ---
+    document.querySelectorAll('.process-token-btn').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            const tokenId = this.dataset.tokenId;
+            if (confirm(`Mark token ${tokenId} as processed?`)) {
+                apiRequest(`/api/process-token/${tokenId}`, { method: 'POST' });
+            }
+        });
+    });
+
+    // --- Event Listener for "Skip" buttons ---
+    document.querySelectorAll('.skip-token-btn').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            const tokenId = this.dataset.tokenId;
+            if (confirm(`Skip token ${tokenId}?`)) {
+                apiRequest(`/api/skip-token/${tokenId}`, { method: 'POST' });
+            }
+        });
+    });
+
+    // --- Event Listener for "Call" buttons ---
+    document.querySelectorAll('.call-token-btn').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            const tokenId = this.dataset.tokenId;
+            if (confirm(`Call token ${tokenId}?`)) {
+                apiRequest(`/api/call-token/${tokenId}`, { method: 'POST' });
+            }
+        });
+    });
+
+    // --- Modal Handling ---
+    const predictionsModal = document.getElementById('predictions-modal');
+    const countersModal = document.getElementById('counters-modal');
+    let predictionsChart = null;
+
+    function openModal(modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal by clicking overlay or close button
+    document.querySelectorAll('.modal-overlay, .modal-close').forEach(el => {
+        el.addEventListener('click', function (event) {
+            if (event.target === this) {
+                closeModal(predictionsModal);
+                closeModal(countersModal);
+            }
+        });
+    });
+
+    // --- Predictions Modal ---
+    const predictionsBtn = document.getElementById('show-predictions-modal');
+    if (predictionsBtn) {
+        predictionsBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            openModal(predictionsModal);
+
+            if (!predictionsChart) {
+                fetch('/api/wait-time-predictions')
+                    .then(res => res.json())
+                    .then(data => {
+                        const ctx = document.getElementById('predictionsChart').getContext('2d');
+                        predictionsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: 'Estimated Wait Time (minutes)',
+                                    data: data.data,
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    });
+            }
+        });
+    }
+
+    // --- Counters Modal ---
+    const countersBtn = document.getElementById('show-counters-modal');
+    if (countersBtn) {
+        countersBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            openModal(countersModal);
+        });
+    }
+
+    document.querySelectorAll('.toggle-counter-status').forEach(button => {
+        button.addEventListener('click', function () {
+            const counterId = this.dataset.counterId;
+            const currentStatus = this.dataset.currentStatus;
+            const newStatus = currentStatus === 'open' ? 'closed' : 'open';
+
+            const options = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            };
+
+            apiRequest(`/api/update-counter/${counterId}`, options, () => {
+                window.location.reload();
+            });
+        });
+    });
+
+    // --- Auto-refresh dashboard every 30 seconds ---
+    setInterval(() => window.location.reload(), 30000);
+
+});
+</script>
+{% endblock %}
